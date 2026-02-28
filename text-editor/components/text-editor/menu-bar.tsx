@@ -1,11 +1,51 @@
-import { AlignCenter, AlignLeft, AlignRight, Bold, Heading1, Heading2, Heading3, Highlighter, Italic, List, ListOrdered, Strikethrough } from "lucide-react"
+import { AlignCenter, AlignLeft, AlignRight, Bold, Heading1, Heading2, Heading3, Highlighter, Image, Italic, Link2, Link2Off, List, ListOrdered, Strikethrough, Underline } from "lucide-react"
 import { Toggle } from "../ui/toggle"
 import { Editor } from "@tiptap/react"
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
+import React, { useCallback } from 'react'
 
 export default function MenuBar({ editor }: { editor: Editor | null }) {
   if (!editor) {
     return null
   }
+
+  const addImage = useCallback(() => {
+    const url = window.prompt('URL')
+    console.log(url);
+    
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+        
+    }
+  }, [editor])
+
+  if (!editor) {
+    return null
+  }
+
+  const setLink = useCallback(() => {
+    const previousUrl = editor.getAttributes('link').href
+    const url = window.prompt('URL', previousUrl)
+
+    // cancelled
+    if (url === null) {
+      return
+    }
+
+    // empty
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+
+      return
+    }
+
+    // update link
+    try {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    } catch (e) {
+      alert(e.message)
+    }
+  }, [editor])
 
   const Options = [
     {
@@ -39,6 +79,11 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
         pressed: editor.isActive("strike"),
     },
     {
+        icon: <Underline className="size-4" />,
+        onClick: () => editor.chain().focus().toggleUnderline().run(),
+        pressed: editor.isActive("underline"),
+    },
+    {
         icon: <AlignLeft className="size-4" />,
         onClick: () => editor.chain().focus().setTextAlign("left").run(),
         pressed: editor.isActive("left"),
@@ -67,6 +112,21 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
         icon: <Highlighter className="size-4" />,
         onClick: () => editor.chain().focus().toggleHighlight().run(),
         pressed: editor.isActive("highlight"),
+    },
+    {
+        icon: <Link2 className="size-4" />,
+        onClick: () => setLink(),
+        pressed: editor.isActive("link"),
+    },
+    {
+        icon: <Link2Off className="size-4" />,
+        onClick: () => editor.chain().focus().unsetLink().run(),
+        pressed: !editor.isActive("link"),
+    },
+    {
+        icon: <Image className="size-4" />,
+        onClick: () => addImage(),
+        pressed: false,
     },
   ]
 
